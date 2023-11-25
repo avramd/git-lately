@@ -1,13 +1,17 @@
 #!/usr/bin/env ruby
 require 'io/console'
 require 'pp'
+require 'optparse'
 
-# lately = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000 |
-#   grep 'checkout:' |
-#   grep -oE '[^ ]+ ~ .*' |
-#   awk -F~ '!seen[$1]++' |
-#   head -n 14 |
-#   awk -F' ~ HEAD@{' ' {printf(\"  \\033[33m%s: \\033[37m %s\\033[0m\\n\", substr($2, 1, length($2)-1), $1)}'
+# Here is the original `git lately`, for posterity. It is an alias definition for a
+# .gitconfig file
+# [alias]
+#   lately = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000 |
+#     grep 'checkout:' |
+#     grep -oE '[^ ]+ ~ .*' |
+#     awk -F~ '!seen[$1]++' |
+#     head -n 14 |
+#     awk -F' ~ HEAD@{' ' {printf(\"  \\033[33m%s: \\033[37m %s\\033[0m\\n\", substr($2, 1, length($2)-1), $1)}'
 
 recents = {}
 index = {}
