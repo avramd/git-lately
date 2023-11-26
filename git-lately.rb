@@ -28,7 +28,12 @@ recents = {}
 index = {}
 labels = ('0'..'9').to_a + ('a'..'f').to_a
 max_ts_len = 0
-branches = `git branch --list`.split("\n").map{|line| line[2..-1]} if options[:branches]
+
+# Maybe overkill to use IO here, but we're opening that can of worms next, 
+# so might as well.
+branches = IO.popen(%w[git branch --list]) do |branch_output|
+  branch_output.each_line.map{ |line| line[2..-2] }
+end if opts[:branches]
 
 #
 # Use IO to open a pipe so output will be buffered. This lets us quit when we have
