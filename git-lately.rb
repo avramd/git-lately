@@ -3,7 +3,20 @@ require 'io/console'
 require 'pp'
 require 'optparse'
 
-require 'optparse'
+# Here is the original `git lately`, for posterity. It is an alias definition for a
+# .gitconfig file
+# [alias]
+#   lately = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000 |\
+#     grep 'checkout:' |\
+#     grep -oE '[^ ]+ ~ .*' |\
+#     awk -F~ '!seen[$1]++' |\
+#     head -n 14 |\
+#     awk -F' ~ HEAD@{' ' {printf(\"  \\033[33m%s: \\033[37m %s\\033[0m\\n\", substr($2, 1, length($2)-1), $1)}'
+
+class Ref
+  attr_reader :timestamp, :ref
+  def initialize(timestamp:, ref:); @timestamp = timestamp; @ref = ref; end
+end
 
 options = {}
 OptionParser.new do |opts|
@@ -16,22 +29,10 @@ end.parse!
 
 options[:num_refs] ||= 16
 
-branches = `git branch --list`.split("\n").map{|line| line[2..-1]} if options[:branches]
-
-# Here is the original `git lately`, for posterity. It is an alias definition for a
-# .gitconfig file
-# [alias]
-#   lately = !git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000 |\
-#     grep 'checkout:' |\
-#     grep -oE '[^ ]+ ~ .*' |\
-#     awk -F~ '!seen[$1]++' |\
-#     head -n 14 |\
-#     awk -F' ~ HEAD@{' ' {printf(\"  \\033[33m%s: \\033[37m %s\\033[0m\\n\", substr($2, 1, length($2)-1), $1)}'
-
 recents = {}
-index = {}
 labels = ('0'..'9').to_a + ('a'..'f').to_a
 max_ts_len = 0
+branches = `git branch --list`.split("\n").map{|line| line[2..-1]} if options[:branches]
 
 reflog = `git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000`
   .split("\n")
@@ -43,20 +44,18 @@ reflog = `git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000`
 
       label = labels[recents.size]
       if ! recents[ref]
-        index[label] = ref 
         max_ts_len = timestamp.length if timestamp.length > max_ts_len
-        recents[ref] = timestamp
+        recents[label] = Ref.new(ref: ref, timestamp: timestamp)
       end
     end
     break if recents.size >= options[:num_refs]
   }
 
-recents.each.with_index{|(ref, timestamp), i| printf("(%-#{max_ts_len}s) #{labels[i]}:%s\n", timestamp, ref) }
+recents.each{|(label, ref)| printf("(%-#{max_ts_len}s) #{label}:%s\n", ref.timestamp, ref.ref) }
 print "Checkout above ref (0-9a-f)? "
-char = STDIN.getch
-ref = index[char]
+label = STDIN.getch
 
-if ref 
+if ref = recents[label]&.ref 
   puts 
   exec "git checkout #{ref}"
 end
