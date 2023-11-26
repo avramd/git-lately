@@ -32,7 +32,7 @@ max_ts_len = 0
 # Maybe overkill to use IO here, but we're opening that can of worms next, 
 # so might as well.
 branches = IO.popen(%w[git branch --list]) do |branch_output|
-  branch_output.each_line.map{ |line| line[2..-2] }
+  branch_output.each(chomp: true).map{ |line| line[2..-1] }
 end if opts[:branches]
 
 #
@@ -41,8 +41,8 @@ end if opts[:branches]
 #
 cmd = %w[git reflog show --pretty=format:%gs~%gd --date=relative]
 IO.popen(cmd) do |reflog|
-  reflog.each_line do |line|
-    line.chomp.match(/checkout:.*?([^ ]+)~HEAD@{(.*)}$/) do |match| 
+  reflog.each(chomp:true) do |line|
+    line.match(/checkout:.*?([^ ]+)~HEAD@{(.*)}$/) do |match| 
       ref, timestamp = match[1..2]
       next if opts[:branches] && !branches.include?(ref)
       label = labels[recents.size]
