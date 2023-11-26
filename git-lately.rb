@@ -13,11 +13,6 @@ require 'optparse'
 #     head -n 14 |\
 #     awk -F' ~ HEAD@{' ' {printf(\"  \\033[33m%s: \\033[37m %s\\033[0m\\n\", substr($2, 1, length($2)-1), $1)}'
 
-class Ref
-  attr_reader :timestamp, :ref
-  def initialize(timestamp:, ref:); @timestamp = timestamp; @ref = ref; end
-end
-
 options = {}
 OptionParser.new do |opts|
   opts.banner = "Usage: #{$0} [options]"
@@ -30,32 +25,36 @@ end.parse!
 options[:num_refs] ||= 16
 
 recents = {}
+index = {}
 labels = ('0'..'9').to_a + ('a'..'f').to_a
 max_ts_len = 0
 branches = `git branch --list`.split("\n").map{|line| line[2..-1]} if options[:branches]
 
-reflog = `git reflog show --pretty=format:'%gs ~ %gd' --date=relative -n 1000`
-  .split("\n")
-  .each{ |line|
-    line.match(/checkout:.*?([^ ]+) ~ HEAD@{(.*)}$/) do |match| 
+#
+# Use IO to open a pipe so output will be buffered. This lets us quit when we have
+# what we want, w/out having to consume the rest of a huge reflog
+#
+cmd = %w[git reflog show --pretty=format:%gs~%gd --date=relative]
+IO.popen(cmd) do |reflog|
+  reflog.each_line do |line|
+    line.chomp.match(/checkout:.*?([^ ]+)~HEAD@{(.*)}$/) do |match| 
       ref, timestamp = match[1..2]
-
       next if options[:branches] && !branches.include?(ref)
-
       label = labels[recents.size]
       if ! recents[ref]
+        index[label] = ref
         max_ts_len = timestamp.length if timestamp.length > max_ts_len
-        recents[label] = Ref.new(ref: ref, timestamp: timestamp)
+        recents[ref] = timestamp
       end
     end
     break if recents.size >= options[:num_refs]
-  }
-
-recents.each{|(label, ref)| printf("(%-#{max_ts_len}s) #{label}:%s\n", ref.timestamp, ref.ref) }
-print "Checkout above ref (0-9a-f)? "
-label = STDIN.getch
-
-if ref = recents[label]&.ref 
-  puts 
-  exec "git checkout #{ref}"
+  end
 end
+
+recents.each.with_index do |(ref, timestamp), i| 
+  printf("(%-#{max_ts_len}s) #{labels[i]}:%s\n", timestamp, ref)
+end
+print "Checkout above ref (0-9a-f)? "
+ref = index[STDIN.getch]
+
+puts && exec(%w[git checkout ref]) if ref
