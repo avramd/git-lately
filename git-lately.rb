@@ -9,9 +9,9 @@ options = {}
 OptionParser.new do |opts|
   opts.banner = "Usage: #{$0} [options]"
 
-  opts.on("-nREFS", "# refs to return (def 16)") { |n| options[:num_refs] = n.to_i }
-  opts.on("-b", "omit non-branch refs") { |b| options[:branches] = !!b }
-  opts.on("-h", "--help", "Prints this help") { puts opts exit }
+  opts.on("-nREFS", "--num-refs=REFS", "# refs to return (def 16)") { |n| options[:num_refs] = n.to_i }
+  opts.on("-b", "--branches", "omit non-branch refs") { |b| options[:branches] = !!b }
+  opts.on("-h", "--help", "Prints this help") { puts opts; exit }
 end.parse!
 
 options[:num_refs] ||= 16
