@@ -26,6 +26,13 @@ Checkout above ref (0-9a-f)? 3
 Switched to branch 'dummy-branch'
 ➜  git-lately git:(dummy-branch)
 ```
-
+### Installation
+1. Copy the `git-lately` script anywhere you like
+2. (optional) add a git alias to ~/.gitconfig, like so:
+```
+# .gitconfig
+[alias]
+  lately=!path/to/git-lately
+```
 ### Credit
-Inspired by and original logic by [@marktabler](https://github.com/marktabler).
+Inspired by, and original logic by [@marktabler](https://github.com/marktabler).
