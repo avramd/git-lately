@@ -60,6 +60,6 @@ recents.each.with_index do |(ref, timestamp), i|
   printf("(%-#{max_ts_len}s) #{labels[i]}:%s\n", timestamp, ref)
 end
 print "Checkout above ref (0-9a-f)? "
-ref = index[STDIN.getch]
 
-puts && exec(%w[git checkout ref]) if ref
+ref = index[char = STDIN.getch]
+puts(char) || system('git', 'checkout', ref) 
