@@ -9,7 +9,7 @@ Usage: git-lately.rb [-b] [-n NUMREFS]
 Git-lately will:
 - print out a list of the most recent git refs that anyone has checked out in the current repository.
 - prefix each with a 1-character label. 
-- prompt for a label of a ref to checkout
+- prompt for the label of a ref in the list to checkout
 - exit with no action on any other input (e.g. q, ESC, <return>)
 
 Git-lately will prompt you for a label to check out for you. Any input other 
