@@ -62,4 +62,4 @@ end
 print "Checkout above ref (0-9a-f)? "
 
 ref = index[char = STDIN.getch]
-puts(char) || system('git', 'checkout', ref) 
+puts(char) || system('git', 'checkout', ref) if ref
